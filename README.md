@@ -119,7 +119,7 @@ Attach the file and call the construction function:
 ```magma
 > Attach("graphD.m");
 > G := AlternatingGroup(5);
-> S := [(1,5)(2,4), (1,2,4,3,5), (2,5,3)];
+> S := [G|(1,5)(2,4), (1,2,4,3,5), (2,5,3)];
 > D := graphDMakerWithGenerators(G, S);
 ```
 
