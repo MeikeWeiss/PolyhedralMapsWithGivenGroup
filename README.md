@@ -26,11 +26,9 @@ The main theorem proved in the paper is:
 
 ```
 .
-├── gap/
-│   ├── construction.g       # Graph construction D_{G,S}
-│   └── cdc.g                # Cycle double cover computation
-├── magma/
-│   └── construction.m       # Graph construction D_{G,S} in Magma
+├── graphD.g     # GAP: graph construction D_{G,S}
+├── cycles.g     # GAP: cycle double cover (loads graphD.g automatically)
+├── graphD.m     # Magma: graph construction D_{G,S}
 └── README.md
 ```
 
@@ -57,58 +55,86 @@ gap> InstallPackage("digraphs");
 
 ## Usage
 
-### GAP
+> **Note on generator ordering:** The generating set `S` must be passed as an **ordered list**, not a set. The construction depends on the ordering — different orderings may produce non-isomorphic graphs (see Section 3.1 of the paper for an explicit example with $G = A_5$).
 
-Load GAP and the Digraphs package, then read the construction file:
+---
+
+### GAP — Graph Construction
+
+Load the Digraphs package and the construction file:
 
 ```gap
-gap> LoadPackage("digraphs");
-gap> Read("gap/construction.g");
+gap> LoadPackage("Digraphs");;
+gap> Read("graphD.g");
 ```
 
-**Construct the graph** $D_{G,S}$ for a given group `G` and generating set `S`:
+**With an explicit generating set** (returns a `Digraph` object):
 
 ```gap
 gap> G := AlternatingGroup(5);
 gap> S := [(1,5)(2,4), (1,2,4,3,5), (2,5,3)];
-gap> D := BuildGraph(G, S);
+gap> D := graphDMakerWithGenerators(G, S);
 ```
 
-**Compute the cycle double cover**:
+**With an automatically computed minimal generating set** (uses GAP's `MinimalGeneratingSet`):
 
 ```gap
-gap> Read("gap/cdc.g");
-gap> Z := ComputeCDC(D, G, S);
+gap> D := graphDMakerWithoutGenerators(G);
 ```
 
-**Verify the automorphism group and CDC invariance**:
+---
+
+### GAP — Cycle Double Cover
+
+Loading `cycles.g` also loads `graphD.g` automatically:
 
 ```gap
-gap> VerifyAutomorphismGroup(D, G);
-gap> VerifyCDCInvariance(D, Z, G);
+gap> LoadPackage("Digraphs");;
+gap> Read("cycles.g");
 ```
 
-### Magma
+**Compute the CDC** (returns a list of vertex-label cycles):
+
+```gap
+gap> G := AlternatingGroup(5);
+gap> S := [(1,5)(2,4), (1,2,4,3,5), (2,5,3)];
+
+gap> Z := make1CutCDCWithGenerators(G, S);      # explicit generating set
+gap> Z := make1CutCDCWithoutGenerators(G);      # uses MinimalGeneratingSet
+```
+
+**Compute the CDC as permutation tuples** (compatible with the [SimplicialSurfaces](https://github.com/gap-packages/SimplicialSurfaces) package):
+
+```gap
+gap> Z := make1CutCDCAsTuplesWithGenerators(G, S);   # explicit generating set
+gap> Z := make1CutCDCAsTuplesWithoutGenerators(G);   # uses MinimalGeneratingSet
+```
+
+---
+
+### Magma — Graph Construction
+
+Attach the file and call the construction function:
 
 ```magma
-> load "magma/construction.m";
+> Attach("graphD.m");
 > G := AlternatingGroup(5);
-> S := {(1,5)(2,4), (1,2,4,3,5), (2,5,3)};
-> D := BuildGraph(G, S);
+> S := [(1,5)(2,4), (1,2,4,3,5), (2,5,3)];
+> D := graphDMakerWithGenerators(G, S);
 ```
+
+The function returns an undirected `GrphUnd` graph object.
 
 ---
 
 ## Testing
 
-The implementations have been tested against randomly selected groups of various orders to validate correctness of:
+The implementations have been tested against randomly selected groups of various orders to validate:
 
 - the graph construction and its vertex/edge counts,
 - the isomorphism $\mathrm{Aut}(D_{G,S}) \cong G$,
-- the CDC properties (every edge covered exactly twice, pairwise intersections of at most one edge),
+- the CDC properties (every edge covered exactly twice, pairwise cycle intersections of at most one edge),
 - invariance of $\mathcal{Z}$ under $\mathrm{Aut}(D_{G,S})$.
-
-Note: the construction depends on the choice of generating set $S$ **and** the ordering of generators. Different orderings may yield non-isomorphic graphs (see Section 3.1 of the paper for an explicit example with $G = A_5$).
 
 ---
 
